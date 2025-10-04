@@ -1,14 +1,7 @@
-const FALLBACK_POSTER = "https://via.placeholder.com/300x450?text=No+Poster";
-
 export const MovieView = ({ movie, onBackClick }) => {
   if (!movie) {
     return null;
   }
-
-  const handleImageError = (event) => {
-    event.currentTarget.src = FALLBACK_POSTER;
-    event.currentTarget.onerror = null;
-  };
 
   return (
     <div>
@@ -17,8 +10,6 @@ export const MovieView = ({ movie, onBackClick }) => {
         <img
           src={movie.image}
           alt={movie.title}
-          referrerPolicy="no-referrer"
-          onError={handleImageError}
         />
       )}
       <p>{movie.description}</p>
@@ -36,4 +27,3 @@ export const MovieView = ({ movie, onBackClick }) => {
     </div>
   );
 };
-
