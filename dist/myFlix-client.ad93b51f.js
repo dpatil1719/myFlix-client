@@ -94,7 +94,54 @@
 
     function localRequire(x) {
       var res = localRequire.resolve(x);
-      return res === false ? {} : newRequire(res);
+      if (res === false) {
+        return {};
+      }
+      // Synthesize a module to follow re-exports.
+      if (Array.isArray(res)) {
+        var m = {__esModule: true};
+        res.forEach(function (v) {
+          var key = v[0];
+          var id = v[1];
+          var exp = v[2] || v[0];
+          var x = newRequire(id);
+          if (key === '*') {
+            Object.keys(x).forEach(function (key) {
+              if (
+                key === 'default' ||
+                key === '__esModule' ||
+                Object.prototype.hasOwnProperty.call(m, key)
+              ) {
+                return;
+              }
+
+              Object.defineProperty(m, key, {
+                enumerable: true,
+                get: function () {
+                  return x[key];
+                },
+              });
+            });
+          } else if (exp === '*') {
+            Object.defineProperty(m, key, {
+              enumerable: true,
+              value: x,
+            });
+          } else {
+            Object.defineProperty(m, key, {
+              enumerable: true,
+              get: function () {
+                if (exp === 'default') {
+                  return x.__esModule ? x.default : x;
+                }
+                return x[exp];
+              },
+            });
+          }
+        });
+        return m;
+      }
+      return newRequire(res);
     }
 
     function resolve(x) {
@@ -160,7 +207,7 @@
       });
     }
   }
-})({"eu3Yh":[function(require,module,exports,__globalThis) {
+})({"hiyDA":[function(require,module,exports,__globalThis) {
 var global = arguments[3];
 var HMR_HOST = null;
 var HMR_PORT = null;
@@ -708,7 +755,7 @@ $RefreshReg$(_c, "MyFlixApplication");
   globalThis.$RefreshReg$ = prevRefreshReg;
   globalThis.$RefreshSig$ = prevRefreshSig;
 }
-},{"react/jsx-dev-runtime":"dVPUn","react-dom/client":"hrvwu","./index.scss":"lJZlQ","./components/main-view/main-view":"etjHZ","@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js":"7woMN"}],"dVPUn":[function(require,module,exports,__globalThis) {
+},{"react/jsx-dev-runtime":"dVPUn","react-dom/client":"hrvwu","./index.scss":"lJZlQ","./components/main-view/main-view":"etjHZ","@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js":"7h6Pi"}],"dVPUn":[function(require,module,exports,__globalThis) {
 'use strict';
 module.exports = require("ee51401569654d91");
 
@@ -16120,44 +16167,20 @@ parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "MainView", ()=>MainView);
 var _jsxDevRuntime = require("react/jsx-dev-runtime");
 var _react = require("react");
+var _reactDefault = parcelHelpers.interopDefault(_react);
 var _movieCard = require("../movie-card/movie-card");
 var _movieView = require("../movie-view/movie-view");
 var _s = $RefreshSig$();
 const MainView = ()=>{
     _s();
     const [selectedMovie, setSelectedMovie] = (0, _react.useState)(null);
-    const [movies] = (0, _react.useState)([
-        {
-            id: 1,
-            title: "Inception",
-            description: "A mind-bending thriller about dream invasion.",
-            genre: "Science Fiction",
-            director: "Christopher Nolan",
-            image: "https://image.tmdb.org/t/p/w500/edv5CZvWj09upOsy2Y6IwDhK8bt.jpg"
-        },
-        {
-            id: 2,
-            title: "The Matrix",
-            description: "A hacker discovers the reality is a simulation.",
-            genre: "Science Fiction",
-            director: "The Wachowskis",
-            image: "https://m.media-amazon.com/images/I/51EG732BV3L._AC_.jpg"
-        },
-        {
-            id: 3,
-            title: "Interstellar",
-            description: "A journey through space and time to save humanity.",
-            genre: "Science Fiction",
-            director: "Christopher Nolan",
-            image: "https://m.media-amazon.com/images/I/91kFYg4fX3L._AC_UF894,1000_QL80_.jpg"
-        }
-    ]);
+    const [movies] = (0, _react.useState)([]);
     if (selectedMovie) return /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _movieView.MovieView), {
         movie: selectedMovie,
         onBackClick: ()=>setSelectedMovie(null)
     }, void 0, false, {
         fileName: "src/components/main-view/main-view.jsx",
-        lineNumber: 37,
+        lineNumber: 13,
         columnNumber: 7
     }, undefined);
     return /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
@@ -16166,7 +16189,7 @@ const MainView = ()=>{
                 children: "Movie List"
             }, void 0, false, {
                 fileName: "src/components/main-view/main-view.jsx",
-                lineNumber: 46,
+                lineNumber: 22,
                 columnNumber: 7
             }, undefined),
             movies.map((movie)=>/*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _movieCard.MovieCard), {
@@ -16174,18 +16197,23 @@ const MainView = ()=>{
                     onMovieClick: ()=>setSelectedMovie(movie)
                 }, movie.id, false, {
                     fileName: "src/components/main-view/main-view.jsx",
-                    lineNumber: 48,
+                    lineNumber: 24,
                     columnNumber: 9
                 }, undefined))
         ]
     }, void 0, true, {
         fileName: "src/components/main-view/main-view.jsx",
-        lineNumber: 45,
+        lineNumber: 21,
         columnNumber: 5
     }, undefined);
 };
-_s(MainView, "mXwAqAEzaRVVUbpgcUXn0nOCt8E=");
+_s(MainView, "l/gydgPxBp+t5UdgB4ri1obLLbo=");
 _c = MainView;
+(0, _react.useEffect)(()=>{
+    fetch("https://fierce-beach-67482-2c91e337192e.herokuapp.com").then((response)=>response.json()).then((data)=>{
+        setMovies(data);
+    }).catch((err)=>console.error("Error fetching movies:", err));
+}, []);
 var _c;
 $RefreshReg$(_c, "MainView");
 
@@ -16194,7 +16222,7 @@ $RefreshReg$(_c, "MainView");
   globalThis.$RefreshReg$ = prevRefreshReg;
   globalThis.$RefreshSig$ = prevRefreshSig;
 }
-},{"react/jsx-dev-runtime":"dVPUn","react":"jMk1U","../movie-card/movie-card":"6BY1s","../movie-view/movie-view":"dkfGy","@parcel/transformer-js/src/esmodule-helpers.js":"KQ2C4","@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js":"7woMN"}],"6BY1s":[function(require,module,exports,__globalThis) {
+},{"react/jsx-dev-runtime":"dVPUn","react":"jMk1U","../movie-card/movie-card":"6BY1s","../movie-view/movie-view":"dkfGy","@parcel/transformer-js/src/esmodule-helpers.js":"jnFvT","@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js":"7h6Pi"}],"6BY1s":[function(require,module,exports,__globalThis) {
 var $parcel$ReactRefreshHelpers$f387 = require("@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js");
 $parcel$ReactRefreshHelpers$f387.init();
 var prevRefreshReg = globalThis.$RefreshReg$;
@@ -16235,7 +16263,7 @@ $RefreshReg$(_c, "MovieCard");
   globalThis.$RefreshReg$ = prevRefreshReg;
   globalThis.$RefreshSig$ = prevRefreshSig;
 }
-},{"react/jsx-dev-runtime":"dVPUn","@parcel/transformer-js/src/esmodule-helpers.js":"KQ2C4","@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js":"7woMN"}],"KQ2C4":[function(require,module,exports,__globalThis) {
+},{"react/jsx-dev-runtime":"dVPUn","@parcel/transformer-js/src/esmodule-helpers.js":"jnFvT","@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js":"7h6Pi"}],"jnFvT":[function(require,module,exports,__globalThis) {
 exports.interopDefault = function(a) {
     return a && a.__esModule ? a : {
         default: a
@@ -16265,9 +16293,9 @@ exports.export = function(dest, destName, get) {
     });
 };
 
-},{}],"7woMN":[function(require,module,exports,__globalThis) {
+},{}],"7h6Pi":[function(require,module,exports,__globalThis) {
 "use strict";
-var Refresh = require("6e93016c936cfb0b");
+var Refresh = require("7422ead32dcc1e6b");
 function debounce(func, delay) {
     {
         let timeout = undefined;
@@ -16305,7 +16333,7 @@ module.exports.init = function() {
             };
         };
         if (typeof window !== 'undefined') {
-            let ErrorOverlay = require("972a17b730c302ac");
+            let ErrorOverlay = require("e4d875b7642f9496");
             ErrorOverlay.setEditorHandler(function(errorLocation) {
                 let file = `${errorLocation.fileName}:${errorLocation.lineNumber || 1}:${errorLocation.colNumber || 1}`;
                 fetch(module.bundle.devServer + `/__parcel_launch_editor?file=${encodeURIComponent(file)}`);
@@ -16428,11 +16456,11 @@ function registerExportsForReactRefresh(module1) {
     }
 }
 
-},{"6e93016c936cfb0b":"a97ki","972a17b730c302ac":"lfExW"}],"a97ki":[function(require,module,exports,__globalThis) {
+},{"7422ead32dcc1e6b":"hpiFP","e4d875b7642f9496":"gnoim"}],"hpiFP":[function(require,module,exports,__globalThis) {
 'use strict';
-module.exports = require("711d6bc391849597");
+module.exports = require("96622d495519d4e");
 
-},{"711d6bc391849597":"7lbia"}],"7lbia":[function(require,module,exports,__globalThis) {
+},{"96622d495519d4e":"7AD9f"}],"7AD9f":[function(require,module,exports,__globalThis) {
 /**
  * @license React
  * react-refresh-runtime.development.js
@@ -16668,7 +16696,7 @@ module.exports = require("711d6bc391849597");
     exports.setSignature = setSignature;
 })();
 
-},{}],"lfExW":[function(require,module,exports,__globalThis) {
+},{}],"gnoim":[function(require,module,exports,__globalThis) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "setEditorHandler", ()=>$da9882e673ac146b$export$25a22ac46f1bd016);
@@ -18543,7 +18571,7 @@ function $da9882e673ac146b$var$ErrorOverlay() {
     return null;
 }
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"KQ2C4"}],"dkfGy":[function(require,module,exports,__globalThis) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"jnFvT"}],"dkfGy":[function(require,module,exports,__globalThis) {
 var $parcel$ReactRefreshHelpers$2262 = require("@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js");
 $parcel$ReactRefreshHelpers$2262.init();
 var prevRefreshReg = globalThis.$RefreshReg$;
@@ -18639,6 +18667,6 @@ $RefreshReg$(_c, "MovieView");
   globalThis.$RefreshReg$ = prevRefreshReg;
   globalThis.$RefreshSig$ = prevRefreshSig;
 }
-},{"react/jsx-dev-runtime":"dVPUn","@parcel/transformer-js/src/esmodule-helpers.js":"KQ2C4","@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js":"7woMN"}]},["eu3Yh","gYcKb"], "gYcKb", "parcelRequireaec4", {}, null, null, "http://localhost:1234")
+},{"react/jsx-dev-runtime":"dVPUn","@parcel/transformer-js/src/esmodule-helpers.js":"jnFvT","@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js":"7h6Pi"}]},["hiyDA","gYcKb"], "gYcKb", "parcelRequireaec4", {}, null, null, "http://localhost:1234")
 
 //# sourceMappingURL=myFlix-client.ad93b51f.js.map
