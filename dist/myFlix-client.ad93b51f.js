@@ -16162,58 +16162,67 @@ var prevRefreshSig = globalThis.$RefreshSig$;
 $parcel$ReactRefreshHelpers$53bb.prelude(module);
 
 try {
+// src/components/main-view/main-view.jsx
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "MainView", ()=>MainView);
 var _jsxDevRuntime = require("react/jsx-dev-runtime");
 var _react = require("react");
-var _reactDefault = parcelHelpers.interopDefault(_react);
 var _movieCard = require("../movie-card/movie-card");
 var _movieView = require("../movie-view/movie-view");
 var _s = $RefreshSig$();
 const MainView = ()=>{
     _s();
+    const [movies, setMovies] = (0, _react.useState)([]);
     const [selectedMovie, setSelectedMovie] = (0, _react.useState)(null);
-    const [movies] = (0, _react.useState)([]);
+    (0, _react.useEffect)(()=>{
+        const API_BASE = "https://fierce-beach-67482-2c91e337192e.herokuapp.com";
+        fetch(`${API_BASE}/movies`).then((response)=>response.json()).then((data)=>{
+            const API_BASE = "https://fierce-beach-67482-2c91e337192e.herokuapp.com";
+            setMovies(data.map((m)=>({
+                    id: m._id,
+                    title: m.Title,
+                    description: m.Description,
+                    image: m.ImagePath?.startsWith("http") ? m.ImagePath : `${API_BASE}${m.ImagePath}`,
+                    genre: m.Genre?.Name,
+                    director: m.Director?.Name
+                })));
+        });
+    }, []);
     if (selectedMovie) return /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _movieView.MovieView), {
         movie: selectedMovie,
         onBackClick: ()=>setSelectedMovie(null)
     }, void 0, false, {
         fileName: "src/components/main-view/main-view.jsx",
-        lineNumber: 13,
+        lineNumber: 35,
         columnNumber: 7
     }, undefined);
     return /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
         children: [
-            /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("h2", {
+            /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("h1", {
                 children: "Movie List"
             }, void 0, false, {
                 fileName: "src/components/main-view/main-view.jsx",
-                lineNumber: 22,
+                lineNumber: 44,
                 columnNumber: 7
             }, undefined),
             movies.map((movie)=>/*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _movieCard.MovieCard), {
                     movie: movie,
-                    onMovieClick: ()=>setSelectedMovie(movie)
+                    onMovieClick: (m)=>setSelectedMovie(m)
                 }, movie.id, false, {
                     fileName: "src/components/main-view/main-view.jsx",
-                    lineNumber: 24,
+                    lineNumber: 46,
                     columnNumber: 9
                 }, undefined))
         ]
     }, void 0, true, {
         fileName: "src/components/main-view/main-view.jsx",
-        lineNumber: 21,
+        lineNumber: 43,
         columnNumber: 5
     }, undefined);
 };
-_s(MainView, "l/gydgPxBp+t5UdgB4ri1obLLbo=");
+_s(MainView, "PO+XgOji7E32nFJj3H5UPLPJ7w4=");
 _c = MainView;
-(0, _react.useEffect)(()=>{
-    fetch("https://fierce-beach-67482-2c91e337192e.herokuapp.com").then((response)=>response.json()).then((data)=>{
-        setMovies(data);
-    }).catch((err)=>console.error("Error fetching movies:", err));
-}, []);
 var _c;
 $RefreshReg$(_c, "MainView");
 
