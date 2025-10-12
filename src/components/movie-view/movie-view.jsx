@@ -1,18 +1,12 @@
 import PropTypes from "prop-types";
+
 export const MovieView = ({ movie, onBackClick }) => {
-  if (!movie) {
-    return null;
-  }
+  if (!movie) return null;
 
   return (
     <div>
       <h2>{movie.title}</h2>
-      {movie.image && (
-        <img
-          src={movie.image}
-          alt={movie.title}
-        />
-      )}
+      {movie.image && <img src={movie.image} alt={movie.title} />}
       <p>{movie.description}</p>
       {movie.genre && (
         <p>
@@ -30,6 +24,13 @@ export const MovieView = ({ movie, onBackClick }) => {
 };
 
 MovieView.propTypes = {
-  movie: MovieCard.propTypes.movie,   
-  onBackClick: PropTypes.func.isRequired
+  movie: PropTypes.shape({
+    id: PropTypes.string.isRequired,          // matches your API mapping (_id → string)
+    title: PropTypes.string.isRequired,
+    description: PropTypes.string,
+    image: PropTypes.string,
+    genre: PropTypes.string,
+    director: PropTypes.string,
+  }).isRequired,
+  onBackClick: PropTypes.func.isRequired,
 };
