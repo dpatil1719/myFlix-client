@@ -14,17 +14,37 @@
   "author": "",
   "type": "commonjs",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "parcel src/index.html",
     "build": "parcel build src/index.html"
   },
   "dependencies": {
+    "bootstrap": "^5.3.8",
     "prop-types": "^15.8.1",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "react": "^18.2.0",
+    "react-bootstrap": "^2.10.10",
+    "react-dom": "^18.2.0"
   },
   "devDependencies": {
     "@parcel/transformer-sass": "^2.16.0",
-    "parcel": "^2.16.0"
+    "parcel": "^2.16.0",
+    "sass": "^1.77.0"
+  },
+  "browserslist": {
+    "production": [
+      ">0.5%",
+      "last 2 versions",
+      "Firefox ESR",
+      "not dead",
+      "not ie 11",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "engines": {
+    "node": ">=16"
   }
 }
