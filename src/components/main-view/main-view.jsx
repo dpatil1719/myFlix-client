@@ -1,8 +1,10 @@
+// src/components/main-view/main-view.jsx
 import { useState, useEffect } from "react";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import Button from "react-bootstrap/Button";
 import Spinner from "react-bootstrap/Spinner";
+import Alert from "react-bootstrap/Alert";
 
 import { SignupView } from "../signup-view/signup-view";
 import { MovieCard } from "../movie-card/movie-card";
@@ -19,31 +21,47 @@ export const MainView = () => {
 
   useEffect(() => {
     if (!token) return;
+
     const API_BASE = "https://fierce-beach-67482-2c91e337192e.herokuapp.com";
     setLoading(true);
     setError("");
+
     fetch(`${API_BASE}/movies`, { headers: { Authorization: `Bearer ${token}` } })
       .then((r) => {
         if (r.status === 401) {
-          localStorage.removeItem("token"); localStorage.removeItem("user");
-          setToken(null); throw new Error("Unauthorized");
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          setToken(null);
+          throw new Error("Unauthorized");
         }
         return r.json();
       })
       .then((data) => {
-        if (!Array.isArray(data)) { setMovies([]); setError("Unexpected response."); return; }
-        setMovies(data.map((m) => ({
-          id: m._id,
-          title: m.Title,
-          description: m.Description,
-          image: m.ImagePath?.startsWith("http") ? m.ImagePath : `${API_BASE}${m.ImagePath}`,
-          genre: m.Genre?.Name, director: m.Director?.Name
-        })));
+        if (!Array.isArray(data)) {
+          setMovies([]);
+          setError("Unexpected response.");
+          return;
+        }
+        setMovies(
+          data.map((m) => ({
+            id: m._id,
+            title: m.Title,
+            description: m.Description,
+            image: m.ImagePath?.startsWith("http")
+              ? m.ImagePath
+              : `${API_BASE}${m.ImagePath}`,
+            genre: m.Genre?.Name,
+            director: m.Director?.Name
+          }))
+        );
       })
-      .catch((e) => { if (e.message !== "Unauthorized") setError("Failed to load movies."); })
+      .catch((e) => {
+        if (e.message !== "Unauthorized") setError("Failed to load movies.");
+      })
       .finally(() => setLoading(false));
   }, [token]);
 
+  // Login / Signup
   if (!token) {
     return (
       <Row className="justify-content-md-center">
@@ -55,7 +73,9 @@ export const MainView = () => {
               <LoginView onLoggedIn={(t) => setToken(t)} />
               <div className="text-center mt-3">
                 Don’t have an account?{" "}
-                <Button variant="link" onClick={() => setShowSignup(true)}>Sign up</Button>
+                <Button variant="link" onClick={() => setShowSignup(true)}>
+                  Sign up
+                </Button>
               </div>
             </>
           )}
@@ -64,6 +84,7 @@ export const MainView = () => {
     );
   }
 
+  // Detail view
   if (selectedMovie) {
     return (
       <Row className="justify-content-md-center">
@@ -74,6 +95,7 @@ export const MainView = () => {
     );
   }
 
+  // List view
   return (
     <>
       <div className="d-flex justify-content-between align-items-center mb-3">
@@ -81,21 +103,37 @@ export const MainView = () => {
         <Button
           variant="secondary"
           onClick={() => {
-            localStorage.removeItem("token"); localStorage.removeItem("user");
-            setSelectedMovie(null); setMovies([]); setToken(null);
-          }}>
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            setSelectedMovie(null);
+            setMovies([]);
+            setToken(null);
+          }}
+        >
           Log out
         </Button>
       </div>
 
-      {loading && <div className="d-flex justify-content-center my-5"><Spinner /></div>}
-      {!loading && error && <div className="text-danger mb-3">{error}</div>}
+      {loading && (
+        <div className="d-flex justify-content-center my-5">
+          <Spinner animation="border" role="status">
+            <span className="visually-hidden">Loading…</span>
+          </Spinner>
+        </div>
+      )}
+
+      {!loading && error && (
+        <Alert variant="danger" className="mb-3">
+          {error}
+        </Alert>
+      )}
+
       {!loading && !error && movies.length === 0 && <div>No movies yet.</div>}
 
       {!loading && !error && movies.length > 0 && (
-        <Row>
+        <Row className="g-4">
           {movies.map((movie) => (
-            <Col key={movie.id} xs={12} sm={6} md={4} lg={3} className="mb-5">
+            <Col key={movie.id} xs={12} sm={6} md={4} lg={3}>
               <MovieCard movie={movie} onMovieClick={(m) => setSelectedMovie(m)} />
             </Col>
           ))}

@@ -1,31 +1,17 @@
-// src/components/movie-card/movie-card.jsx
 import PropTypes from "prop-types";
-import { Card, Button } from "react-bootstrap";
+import Card from "react-bootstrap/Card";
+import Button from "react-bootstrap/Button";
 
-export const MovieCard = ({ movie, onMovieClick }) => {
-  const title = movie.title;
-  const image =
-    movie.image || "https://via.placeholder.com/500x750?text=Poster";
-  const desc = movie.description || "";
-
-  return (
-    <Card className="h-100">
-      <Card.Img variant="top" src={image} alt={title} />
-      <Card.Body>
-        <Card.Title>{title}</Card.Title>
-        {desc && (
-          <Card.Text className="text-muted">
-            {desc.slice(0, 120)}
-            {desc.length > 120 ? "…" : ""}
-          </Card.Text>
-        )}
-        <Button variant="primary" onClick={() => onMovieClick(movie)}>
-          View
-        </Button>
-      </Card.Body>
-    </Card>
-  );
-};
+export const MovieCard = ({ movie, onMovieClick }) => (
+  <Card className="h-100">
+    {movie.image && <Card.Img variant="top" src={movie.image} alt={movie.title} />}
+    <Card.Body>
+      <Card.Title className="h6 mb-2">{movie.title}</Card.Title>
+      {movie.genre && <Card.Text className="text-muted mb-3">{movie.genre}</Card.Text>}
+      <Button variant="primary" onClick={() => onMovieClick(movie)}>Open</Button>
+    </Card.Body>
+  </Card>
+);
 
 MovieCard.propTypes = {
   movie: PropTypes.shape({

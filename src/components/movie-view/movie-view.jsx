@@ -1,47 +1,27 @@
-// src/components/movie-view/movie-view.jsx
 import PropTypes from "prop-types";
+import Card from "react-bootstrap/Card";
 import Button from "react-bootstrap/Button";
 
 export const MovieView = ({ movie, onBackClick }) => {
   if (!movie) return null;
 
   return (
-    <div>
-      <h2 className="h4 mb-3">{movie.title}</h2>
-
-      {movie.image && (
-        <img
-          src={movie.image}
-          alt={movie.title}
-          className="img-fluid mb-3"
-        />
-      )}
-
-      {movie.description && <p className="mb-2">{movie.description}</p>}
-
-      <div className="mb-3">
-        {movie.genre && (
-          <div>
-            <strong>Genre:</strong> {movie.genre}
-          </div>
-        )}
-        {movie.director && (
-          <div>
-            <strong>Director:</strong> {movie.director}
-          </div>
-        )}
-      </div>
-
-      <Button variant="secondary" onClick={onBackClick}>
-        Back
-      </Button>
-    </div>
+    <Card>
+      {movie.image && <Card.Img variant="top" src={movie.image} alt={movie.title} />}
+      <Card.Body>
+        <Card.Title className="h4">{movie.title}</Card.Title>
+        {movie.description && <Card.Text className="mb-3">{movie.description}</Card.Text>}
+        {movie.genre && <Card.Text><strong>Genre:</strong> {movie.genre}</Card.Text>}
+        {movie.director && <Card.Text><strong>Director:</strong> {movie.director}</Card.Text>}
+        <Button variant="link" onClick={onBackClick}>Back</Button>
+      </Card.Body>
+    </Card>
   );
 };
 
 MovieView.propTypes = {
   movie: PropTypes.shape({
-    id: PropTypes.string,
+    id: PropTypes.string.isRequired,
     title: PropTypes.string.isRequired,
     description: PropTypes.string,
     image: PropTypes.string,

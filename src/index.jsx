@@ -1,14 +1,15 @@
 import { createRoot } from "react-dom/client";
-import "bootstrap/dist/css/bootstrap.min.css";   
+import "bootstrap/dist/css/bootstrap.min.css";   // keep simple import
 import "./index.scss";
+
+import Container from "react-bootstrap/Container";
 import { MainView } from "./components/main-view/main-view";
 
 const MyFlixApplication = () => (
-  <div className="my-flix">
+  <Container className="my-flix min-vh-100 py-5">
     <MainView />
-  </div>
+  </Container>
 );
 
-const container = document.getElementById("root");
-const root = createRoot(container);
+const root = createRoot(document.getElementById("root"));
 root.render(<MyFlixApplication />);
