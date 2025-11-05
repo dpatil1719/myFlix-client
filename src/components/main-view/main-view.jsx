@@ -1,36 +1,49 @@
 // src/components/main-view/main-view.jsx
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import Button from "react-bootstrap/Button";
 import Spinner from "react-bootstrap/Spinner";
-import Alert from "react-bootstrap/Alert";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import { SignupView } from "../signup-view/signup-view";
 import { MovieCard } from "../movie-card/movie-card";
 import { MovieView } from "../movie-view/movie-view";
 import { LoginView } from "../login-view/login-view";
+import { NavigationBar } from "../navigation-bar/navigation-bar";
+import { ProfileView } from "../profile-view/profile-view";
+
+const API_BASE = "https://fierce-beach-67482-2c91e337192e.herokuapp.com";
 
 export const MainView = () => {
   const [token, setToken] = useState(localStorage.getItem("token"));
-  const [movies, setMovies] = useState([]);
-  const [selectedMovie, setSelectedMovie] = useState(null);
-  const [showSignup, setShowSignup] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [user, setUser]   = useState(() => {
+    const raw = localStorage.getItem("user");
+    return raw ? JSON.parse(raw) : null;
+  });
 
+  const [movies, setMovies] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError]     = useState("");
+
+  // Refresh user from localStorage whenever token changes (after login)
+  useEffect(() => {
+    const raw = localStorage.getItem("user");
+    if (raw) setUser(JSON.parse(raw));
+  }, [token]);
+
+  // Load movies when authenticated
   useEffect(() => {
     if (!token) return;
-
-    const API_BASE = "https://fierce-beach-67482-2c91e337192e.herokuapp.com";
     setLoading(true);
     setError("");
-
-    fetch(`${API_BASE}/movies`, { headers: { Authorization: `Bearer ${token}` } })
+    fetch(`${API_BASE}/movies`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
       .then((r) => {
         if (r.status === 401) {
-          localStorage.removeItem("token");
-          localStorage.removeItem("user");
+          localStorage.clear();
+          setUser(null);
           setToken(null);
           throw new Error("Unauthorized");
         }
@@ -61,84 +74,156 @@ export const MainView = () => {
       .finally(() => setLoading(false));
   }, [token]);
 
-  // Login / Signup
-  if (!token) {
-    return (
-      <Row className="justify-content-md-center">
-        <Col md={5}>
-          {showSignup ? (
-            <SignupView onSwitchToLogin={() => setShowSignup(false)} />
-          ) : (
-            <>
-              <LoginView onLoggedIn={(t) => setToken(t)} />
-              <div className="text-center mt-3">
-                Don’t have an account?{" "}
-                <Button variant="link" onClick={() => setShowSignup(true)}>
-                  Sign up
-                </Button>
-              </div>
-            </>
-          )}
-        </Col>
-      </Row>
-    );
-  }
+  // Favorite helpers — update API then local user state
+  const addFavorite = async (movieId) => {
+    if (!user || !token) return;
+    await fetch(`${API_BASE}/users/${encodeURIComponent(user.Username)}/movies/${movieId}`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const updated = {
+      ...user,
+      FavoriteMovies: Array.from(new Set([...(user.FavoriteMovies || []), movieId]))
+    };
+    setUser(updated);
+    localStorage.setItem("user", JSON.stringify(updated));
+  };
 
-  // Detail view
-  if (selectedMovie) {
-    return (
-      <Row className="justify-content-md-center">
-        <Col md={8}>
-          <MovieView movie={selectedMovie} onBackClick={() => setSelectedMovie(null)} />
-        </Col>
-      </Row>
-    );
-  }
+  const removeFavorite = async (movieId) => {
+    if (!user || !token) return;
+    await fetch(`${API_BASE}/users/${encodeURIComponent(user.Username)}/movies/${movieId}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const updated = {
+      ...user,
+      FavoriteMovies: (user.FavoriteMovies || []).filter((id) => id !== movieId)
+    };
+    setUser(updated);
+    localStorage.setItem("user", JSON.stringify(updated));
+  };
 
-  // List view
+  const onLoggedOut = () => {
+    localStorage.clear();
+    setUser(null);
+    setToken(null);
+    setMovies([]);
+  };
+
+  const isAuthed = useMemo(() => Boolean(token), [token]);
+
   return (
-    <>
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h1 className="h4 m-0">Movie List</h1>
-        <Button
-          variant="secondary"
-          onClick={() => {
-            localStorage.removeItem("token");
-            localStorage.removeItem("user");
-            setSelectedMovie(null);
-            setMovies([]);
-            setToken(null);
-          }}
-        >
-          Log out
-        </Button>
-      </div>
+    <BrowserRouter>
+      <NavigationBar user={user} onLoggedOut={onLoggedOut} />
 
-      {loading && (
-        <div className="d-flex justify-content-center my-5">
-          <Spinner animation="border" role="status">
-            <span className="visually-hidden">Loading…</span>
-          </Spinner>
-        </div>
-      )}
+      <Row className="justify-content-md-center">
+        <Routes>
+          {/* Sign up */}
+          <Route
+            path="/signup"
+            element={
+              isAuthed ? (
+                <Navigate to="/" />
+              ) : (
+                <Col md={5}>
+                  <SignupView onSwitchToLogin={() => (window.location.href = "/login")} />
+                </Col>
+              )
+            }
+          />
 
-      {!loading && error && (
-        <Alert variant="danger" className="mb-3">
-          {error}
-        </Alert>
-      )}
+          {/* Login */}
+          <Route
+            path="/login"
+            element={
+              isAuthed ? (
+                <Navigate to="/" />
+              ) : (
+                <Col md={5}>
+                  <LoginView onLoggedIn={(t) => setToken(t)} />
+                </Col>
+              )
+            }
+          />
 
-      {!loading && !error && movies.length === 0 && <div>No movies yet.</div>}
+          {/* Profile (authenticated only) */}
+          <Route
+            path="/profile"
+            element={
+              !isAuthed ? (
+                <Navigate to="/login" replace />
+              ) : (
+                <Col md={8}>
+                  <ProfileView
+                    user={user}
+                    token={token}
+                    movies={movies}
+                    onUserChange={(u) => {
+                      setUser(u);
+                      localStorage.setItem("user", JSON.stringify(u));
+                    }}
+                    onLoggedOut={onLoggedOut}
+                    apiBase={API_BASE}
+                    onRemoveFavorite={removeFavorite}
+                  />
+                </Col>
+              )
+            }
+          />
 
-      {!loading && !error && movies.length > 0 && (
-        <Row className="g-4">
-          {movies.map((movie) => (
-            <Col key={movie.id} xs={12} sm={6} md={4} lg={3}>
-              <MovieCard movie={movie} onMovieClick={(m) => setSelectedMovie(m)} />
-            </Col>
-          ))}
-        </Row>
-      )}
-    </>
+          {/* Single movie (authenticated only) */}
+          <Route
+            path="/movies/:movieId"
+            element={
+              !isAuthed ? (
+                <Navigate to="/login" replace />
+              ) : movies.length === 0 ? (
+                <Col>The list is empty!</Col>
+              ) : (
+                <Col md={8}>
+                  <MovieView
+                    movies={movies}
+                    isFavorite={(id) => (user?.FavoriteMovies || []).includes(id)}
+                    onAddFavorite={addFavorite}
+                    onRemoveFavorite={removeFavorite}
+                  />
+                </Col>
+              )
+            }
+          />
+
+          {/* Home — grid of cards (authenticated only) */}
+          <Route
+            path="/"
+            element={
+              !isAuthed ? (
+                <Navigate to="/login" replace />
+              ) : loading ? (
+                <Col className="text-center my-5">
+                  <Spinner />
+                </Col>
+              ) : error ? (
+                <Col className="text-danger">{error}</Col>
+              ) : movies.length === 0 ? (
+                <Col>No movies yet.</Col>
+              ) : (
+                <>
+                  {movies.map((movie) => (
+                    <Col key={movie.id} xs={12} sm={6} md={4} lg={3} className="mb-5">
+                      <MovieCard
+                        movie={movie}
+                        isFavorite={(user?.FavoriteMovies || []).includes(movie.id)}
+                        onAddFavorite={() => addFavorite(movie.id)}
+                        onRemoveFavorite={() => removeFavorite(movie.id)}
+                      />
+                    </Col>
+                  ))}
+                </>
+              )
+            }
+          />
+        </Routes>
+      </Row>
+    </BrowserRouter>
   );
 };
