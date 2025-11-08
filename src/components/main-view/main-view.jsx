@@ -1,8 +1,7 @@
 // src/components/main-view/main-view.jsx
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
-import Button from "react-bootstrap/Button";
 import Spinner from "react-bootstrap/Spinner";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
@@ -17,22 +16,24 @@ const API_BASE = "https://fierce-beach-67482-2c91e337192e.herokuapp.com";
 
 export const MainView = () => {
   const [token, setToken] = useState(localStorage.getItem("token"));
-  const [user, setUser]   = useState(() => {
+  const [user, setUser] = useState(() => {
     const raw = localStorage.getItem("user");
     return raw ? JSON.parse(raw) : null;
   });
 
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState("");
+  const [error, setError] = useState("");
+  // for clean router-based redirect after signup (no window.location)
+  const [goLogin, setGoLogin] = useState(false);
 
-  // Refresh user from localStorage whenever token changes (after login)
+  // Keep user in sync after login
   useEffect(() => {
     const raw = localStorage.getItem("user");
     if (raw) setUser(JSON.parse(raw));
   }, [token]);
 
-  // Load movies when authenticated
+  // Load movies once authenticated
   useEffect(() => {
     if (!token) return;
     setLoading(true);
@@ -74,16 +75,18 @@ export const MainView = () => {
       .finally(() => setLoading(false));
   }, [token]);
 
-  // Favorite helpers — update API then local user state
+  // Favorites — update API then local user state to keep Profile in sync
   const addFavorite = async (movieId) => {
     if (!user || !token) return;
-    await fetch(`${API_BASE}/users/${encodeURIComponent(user.Username)}/movies/${movieId}`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    await fetch(
+      `${API_BASE}/users/${encodeURIComponent(user.Username)}/movies/${movieId}`,
+      { method: "POST", headers: { Authorization: `Bearer ${token}` } }
+    );
     const updated = {
       ...user,
-      FavoriteMovies: Array.from(new Set([...(user.FavoriteMovies || []), movieId]))
+      FavoriteMovies: Array.from(
+        new Set([...(user.FavoriteMovies || []), movieId])
+      )
     };
     setUser(updated);
     localStorage.setItem("user", JSON.stringify(updated));
@@ -91,10 +94,10 @@ export const MainView = () => {
 
   const removeFavorite = async (movieId) => {
     if (!user || !token) return;
-    await fetch(`${API_BASE}/users/${encodeURIComponent(user.Username)}/movies/${movieId}`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    await fetch(
+      `${API_BASE}/users/${encodeURIComponent(user.Username)}/movies/${movieId}`,
+      { method: "DELETE", headers: { Authorization: `Bearer ${token}` } }
+    );
     const updated = {
       ...user,
       FavoriteMovies: (user.FavoriteMovies || []).filter((id) => id !== movieId)
@@ -118,15 +121,17 @@ export const MainView = () => {
 
       <Row className="justify-content-md-center">
         <Routes>
-          {/* Sign up */}
+          {/* Signup */}
           <Route
             path="/signup"
             element={
               isAuthed ? (
                 <Navigate to="/" />
+              ) : goLogin ? (
+                <Navigate to="/login" replace />
               ) : (
                 <Col md={5}>
-                  <SignupView onSwitchToLogin={() => (window.location.href = "/login")} />
+                  <SignupView onSwitchToLogin={() => setGoLogin(true)} />
                 </Col>
               )
             }
@@ -146,7 +151,7 @@ export const MainView = () => {
             }
           />
 
-          {/* Profile (authenticated only) */}
+          {/* Profile (protected) */}
           <Route
             path="/profile"
             element={
@@ -158,12 +163,12 @@ export const MainView = () => {
                     user={user}
                     token={token}
                     movies={movies}
+                    apiBase={API_BASE}
                     onUserChange={(u) => {
                       setUser(u);
                       localStorage.setItem("user", JSON.stringify(u));
                     }}
                     onLoggedOut={onLoggedOut}
-                    apiBase={API_BASE}
                     onRemoveFavorite={removeFavorite}
                   />
                 </Col>
@@ -171,7 +176,7 @@ export const MainView = () => {
             }
           />
 
-          {/* Single movie (authenticated only) */}
+          {/* Single movie (protected) */}
           <Route
             path="/movies/:movieId"
             element={
@@ -192,7 +197,7 @@ export const MainView = () => {
             }
           />
 
-          {/* Home — grid of cards (authenticated only) */}
+          {/* Home (protected) */}
           <Route
             path="/"
             element={
@@ -209,10 +214,19 @@ export const MainView = () => {
               ) : (
                 <>
                   {movies.map((movie) => (
-                    <Col key={movie.id} xs={12} sm={6} md={4} lg={3} className="mb-5">
+                    <Col
+                      key={movie.id}
+                      xs={12}
+                      sm={6}
+                      md={4}
+                      lg={3}
+                      className="mb-5"
+                    >
                       <MovieCard
                         movie={movie}
-                        isFavorite={(user?.FavoriteMovies || []).includes(movie.id)}
+                        isFavorite={(user?.FavoriteMovies || []).includes(
+                          movie.id
+                        )}
                         onAddFavorite={() => addFavorite(movie.id)}
                         onRemoveFavorite={() => removeFavorite(movie.id)}
                       />
@@ -220,6 +234,14 @@ export const MainView = () => {
                   ))}
                 </>
               )
+            }
+          />
+
+          {/* Fallback */}
+          <Route
+            path="*"
+            element={
+              <Navigate to={isAuthed ? "/" : "/login"} replace />
             }
           />
         </Routes>

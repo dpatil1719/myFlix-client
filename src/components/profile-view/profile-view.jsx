@@ -1,5 +1,7 @@
+// src/components/profile-view/profile-view.jsx
 import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import Row from "react-bootstrap/Row";
@@ -22,11 +24,11 @@ export const ProfileView = ({
     Birthday: user?.Birthday?.slice(0, 10) || ""
   });
   const [msg, setMsg] = useState("");
+  const [err, setErr] = useState("");
 
-  // Optional: pull fresh user info from the API
+  // Pull fresh user info (if supported by your API)
   useEffect(() => {
-    if (!user?.Username) return;
-    // If your API supports GET /users/:Username:
+    if (!token || !user?.Username) return;
     fetch(`${apiBase}/users/${encodeURIComponent(user.Username)}`, {
       headers: { Authorization: `Bearer ${token}` }
     })
@@ -43,17 +45,19 @@ export const ProfileView = ({
         }
       })
       .catch(() => {});
-  }, []); // eslint-disable-line
+  }, [apiBase, token, user?.Username, onUserChange]);
 
   const handleUpdate = async (e) => {
     e.preventDefault();
     setMsg("");
+    setErr("");
     const body = {
       Username: form.Username,
       Email: form.Email,
       Birthday: form.Birthday || undefined,
       ...(form.Password ? { Password: form.Password } : {})
     };
+
     const res = await fetch(
       `${apiBase}/users/${encodeURIComponent(user.Username)}`,
       {
@@ -65,23 +69,26 @@ export const ProfileView = ({
         body: JSON.stringify(body)
       }
     );
+
     if (res.ok) {
       const updated = await res.json();
       onUserChange(updated);
       setMsg("Profile updated.");
       setForm((f) => ({ ...f, Password: "" }));
     } else {
-      setMsg("Update failed.");
+      setErr("Update failed. Please check inputs and try again.");
     }
   };
 
   const handleDelete = async () => {
+    // eslint-disable-next-line no-restricted-globals
     if (!confirm("Delete your account? This cannot be undone.")) return;
     const res = await fetch(
       `${apiBase}/users/${encodeURIComponent(user.Username)}`,
       { method: "DELETE", headers: { Authorization: `Bearer ${token}` } }
     );
     if (res.ok) onLoggedOut();
+    else setErr("Delete failed. Please try again.");
   };
 
   const favoriteMovies = movies.filter((m) =>
@@ -91,6 +98,9 @@ export const ProfileView = ({
   return (
     <div>
       <h3 className="mb-3">Your Profile</h3>
+
+      {err && <div className="text-danger mb-2">{err}</div>}
+      {msg && <div className="text-success mb-2">{msg}</div>}
 
       <Form onSubmit={handleUpdate} className="mb-4">
         <Row className="g-3">
@@ -105,6 +115,7 @@ export const ProfileView = ({
               />
             </Form.Group>
           </Col>
+
           <Col md={6}>
             <Form.Group>
               <Form.Label>New Password (optional)</Form.Label>
@@ -116,6 +127,7 @@ export const ProfileView = ({
               />
             </Form.Group>
           </Col>
+
           <Col md={6}>
             <Form.Group>
               <Form.Label>Email</Form.Label>
@@ -127,6 +139,7 @@ export const ProfileView = ({
               />
             </Form.Group>
           </Col>
+
           <Col md={6}>
             <Form.Group>
               <Form.Label>Birthday</Form.Label>
@@ -145,8 +158,6 @@ export const ProfileView = ({
             Delete account
           </Button>
         </div>
-
-        {msg && <div className="mt-2 text-muted">{msg}</div>}
       </Form>
 
       <h4 className="mb-3">Favorite Movies</h4>
@@ -157,16 +168,23 @@ export const ProfileView = ({
           {favoriteMovies.map((m) => (
             <Col key={m.id} xs={12} sm={6} md={4} lg={3} className="mb-4">
               <Card className="h-100">
-                {m.image && <Card.Img variant="top" src={m.image} alt={m.title} />}
-                <Card.Body>
-                  <Card.Title>{m.title}</Card.Title>
-                  <Button
-                    size="sm"
-                    variant="outline-danger"
-                    onClick={() => onRemoveFavorite(m.id)}
-                  >
-                    Remove
-                  </Button>
+                {m.image && (
+                  <Card.Img variant="top" src={m.image} alt={m.title} />
+                )}
+                <Card.Body className="d-flex flex-column">
+                  <Card.Title className="mb-3">{m.title}</Card.Title>
+                  <div className="mt-auto d-flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline-danger"
+                      onClick={() => onRemoveFavorite(m.id)}
+                    >
+                      Remove
+                    </Button>
+                    <Button as={Link} to={`/movies/${m.id}`} size="sm" variant="link">
+                      Open
+                    </Button>
+                  </div>
                 </Card.Body>
               </Card>
             </Col>

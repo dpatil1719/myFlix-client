@@ -1,22 +1,16 @@
+// src/index.jsx
 import { createRoot } from "react-dom/client";
-import "bootstrap/dist/css/bootstrap.min.css";   // keep simple import
-import "./index.scss";
-
+import "bootstrap/dist/css/bootstrap.min.css"; // Bootstrap CSS first
+import "./index.scss";                         // then your custom styles
 import Container from "react-bootstrap/Container";
 import { MainView } from "./components/main-view/main-view";
 
 const MyFlixApplication = () => (
-  <Container className="my-flix min-vh-100 py-5">
+  <Container className="py-4">
     <MainView />
   </Container>
 );
 
-const root = createRoot(document.getElementById("root"));
+const container = document.getElementById("root");
+const root = createRoot(container);
 root.render(<MyFlixApplication />);
-
-
-
-
-
-
-
