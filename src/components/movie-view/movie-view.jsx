@@ -1,32 +1,65 @@
+// src/components/movie-view/movie-view.jsx
 import PropTypes from "prop-types";
-import Card from "react-bootstrap/Card";
+import { useParams, Link } from "react-router-dom";
 import Button from "react-bootstrap/Button";
 
-export const MovieView = ({ movie, onBackClick }) => {
-  if (!movie) return null;
+export const MovieView = ({ movies, isFavorite, onAddFavorite, onRemoveFavorite }) => {
+  const { movieId } = useParams();
+  const movie = movies.find((m) => m.id === movieId);
+
+  if (!movie) {
+    return <div>Movie not found.</div>;
+  }
+
+  const fav = isFavorite ? isFavorite(movie.id) : false;
 
   return (
-    <Card>
-      {movie.image && <Card.Img variant="top" src={movie.image} alt={movie.title} />}
-      <Card.Body>
-        <Card.Title className="h4">{movie.title}</Card.Title>
-        {movie.description && <Card.Text className="mb-3">{movie.description}</Card.Text>}
-        {movie.genre && <Card.Text><strong>Genre:</strong> {movie.genre}</Card.Text>}
-        {movie.director && <Card.Text><strong>Director:</strong> {movie.director}</Card.Text>}
-        <Button variant="link" onClick={onBackClick}>Back</Button>
-      </Card.Body>
-    </Card>
+    <div>
+      <h2 className="mb-3">{movie.title}</h2>
+      {movie.image && (
+        <img
+          src={movie.image}
+          alt={movie.title}
+          className="img-fluid mb-3"
+          style={{ maxHeight: 420, objectFit: "cover" }}
+        />
+      )}
+
+      <p className="mb-2">{movie.description}</p>
+      {movie.genre && (
+        <p className="mb-1">
+          <strong>Genre:</strong> {movie.genre}
+        </p>
+      )}
+      {movie.director && (
+        <p className="mb-3">
+          <strong>Director:</strong> {movie.director}
+        </p>
+      )}
+
+      <div className="d-flex gap-2">
+        <Button as={Link} to="/" variant="secondary">
+          Back
+        </Button>
+        {fav ? (
+          <Button variant="outline-danger" onClick={() => onRemoveFavorite(movie.id)}>
+            Remove Favorite
+          </Button>
+        ) : (
+          <Button onClick={() => onAddFavorite(movie.id)}>Add Favorite</Button>
+        )}
+      </div>
+    </div>
   );
 };
 
 MovieView.propTypes = {
-  movie: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    title: PropTypes.string.isRequired,
-    description: PropTypes.string,
-    image: PropTypes.string,
-    genre: PropTypes.string,
-    director: PropTypes.string
-  }),
-  onBackClick: PropTypes.func.isRequired
+  movies: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired
+    })
+  ).isRequired,
+  isFavorite: PropTypes.func.isRequired,
+  onAddFavorite: PropTypes.func.isRequired,
+  onRemoveFavorite: PropTypes.func.isRequired
 };
