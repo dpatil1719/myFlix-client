@@ -69,9 +69,16 @@ export const MainView = () => {
             id: m._id,
             title: m.Title,
             description: m.Description,
-            image: m.ImagePath?.startsWith("http")
-              ? m.ImagePath
-              : `${API_BASE}${m.ImagePath}`,
+            image: (() => {
+              const raw = m.ImagePath || "";
+              if (!raw) return null;
+              try {
+                // Resolves absolute URLs unchanged, and fixes /relative or relative paths against API_BASE
+                return new URL(raw, API_BASE).toString();
+              } catch {
+                return null;
+              }
+            })(),
             genre: m.Genre?.Name,
             director: m.Director?.Name
           }))
