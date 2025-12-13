@@ -1,5 +1,62 @@
-
 # myFlix Client (Parcel)
+A React frontend for the myFlix API. Users can sign up, log in, browse movies, view details, and manage their profile/favorites.
+
+## Live Demo
+- App: https://<your-netlify-site>.netlify.app
+- API: https://<your-heroku-app>.herokuapp.com
+
+## Features
+- 🔐 Login/Signup with token persisted in localStorage
+- 🎬 Movies list + detail view
+- 🔎 **Filter on MainView** (search by title + genre dropdown)
+- 🧭 SPA navigation (client-side routing)*
+- 🧱 Responsive UI with React Bootstrap
+- ⚠️ Loading spinner + error messages
+
+\* If your routing is not set up yet, you can remove this bullet for now.
+
+## Tech Stack
+- React 18
+- React Bootstrap
+- Fetch API (HTTP)
+- Parcel 2 (dev & build)
+- React Router* (if used)
+- Redux / Redux Toolkit* (if used)
+
+## Quick Start
+```bash
+npm install
+npx parcel src/index.html
+# or: npm run dev  (if you added a dev script)
+```
+
+## Build for Production
+```bash
+npx parcel build src/index.html --public-url /
+# outputs to: dist/
+```
+
+## Deployment (Netlify)
+
+1) Add SPA redirect at project root (done):
+   ```toml
+   # netlify.toml
+   [[redirects]]
+     from = "/*"
+     to = "/"
+     status = 200
+   ```
+
+2) Ensure Parcel is a dev dependency (versions aligned):
+   ```bash
+   npm i -D parcel@2.9.3 @parcel/transformer-sass@2.9.3
+   ```
+
+3) Connect GitHub repo in Netlify, then set:
+   - **Build command:** `parcel build src/index.html --public-url /`
+   - **Publish directory:** `dist`
+
+4) Deploy → rename site to something friendly (optional).
 
 A simple front-end client for the **myFlix** movie app. This repo uses **Parcel** as the bundler for fast local development and easy builds.
 
